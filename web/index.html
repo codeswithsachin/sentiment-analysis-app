@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sentiment Analysis Web Application</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="dot"></div>
+      <div><h1>Sentiment Analysis</h1><p>Java back-end &middot; lexicon + Naive Bayes &middot; live dashboard</p></div>
+    </div>
+    <nav id="tabs">
+      <button data-tab="analyze" class="on">Analyze</button>
+      <button data-tab="batch">Batch / CSV</button>
+      <button data-tab="dashboard">Dashboard</button>
+      <button data-tab="history">History</button>
+      <button data-tab="lexicon">Lexicon</button>
+      <button data-tab="model">Model Lab</button>
+    </nav>
+    <div class="engine">
+      <label>Engine</label>
+      <select id="engine">
+        <option value="lexicon">Lexicon (rule based)</option>
+        <option value="naivebayes">Naive Bayes (ML)</option>
+      </select>
+    </div>
+  </header>
+
+  <main>
+    <section id="tab-analyze" class="tab on">
+      <div class="card">
+        <h2>Analyze one text</h2>
+        <textarea id="txt" placeholder="Type or paste a review, post or comment...">The food was AMAZING and the staff were very friendly!</textarea>
+        <div class="bar">
+          <button class="pri" id="go">Analyze</button>
+          <button data-s="I love this phone, the display is beautiful 😍">Positive sample</button>
+          <button data-s="Worst service ever. The app keeps crashing and support was rude.">Negative sample</button>
+          <button data-s="The parcel arrived on Tuesday.">Neutral sample</button>
+          <button data-s="The camera is really good, but the battery is not great.">Mixed sample</button>
+        </div>
+        <div class="res" id="res">
+          <div class="label" id="lab"></div>
+          <div class="mono" id="cmp"></div>
+          <div class="gauge"><i id="mark"></i></div>
+          <div class="scale"><span>-1 negative</span><span>0</span><span>+1 positive</span></div>
+          <div class="split" id="split"></div>
+          <div class="legend" id="leg"></div>
+          <div class="hl" id="hl"></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Live social feed simulator</h2>
+        <p class="sub">Pulls a random post and scores it in real time &mdash; useful for Social Media Analytics.</p>
+        <div class="bar">
+          <button class="pri" id="feedGo">Get next post</button>
+          <button id="feedAuto">Auto (every 2s)</button>
+        </div>
+        <div id="feedList"></div>
+      </div>
+    </section>
+
+    <section id="tab-batch" class="tab">
+      <div class="card">
+        <h2>Analyze many posts (one per line)</h2>
+        <textarea id="batch" style="min-height:150px">Loved the new update, super smooth and fast! 👍
+Customer support was useless and rude.
+The delivery was okay, nothing special.
+This is the WORST app I have ever used!!!
+Great value for money, I would recommend it.
+The event starts at 5 pm.
+Not happy with the quality, it broke in two days.
+Really enjoyed the concert, what a wonderful night ❤️</textarea>
+        <div class="bar"><button class="pri" id="runB">Analyze all lines</button></div>
+        <div id="bout"></div>
+      </div>
+      <div class="card">
+        <h2>Upload a CSV</h2>
+        <p class="sub">Any column named text, review, comment, post or tweet. Without a header, the first column is used.</p>
+        <input type="file" id="csvFile" accept=".csv,text/csv">
+        <div class="bar"><button class="pri" id="csvGo">Analyze CSV</button></div>
+        <div id="csvOut"></div>
+      </div>
+    </section>
+
+    <section id="tab-dashboard" class="tab">
+      <div class="card"><h2>Overview</h2><div id="dashTop"></div></div>
+      <div class="grid2">
+        <div class="card"><h2>Sentiment trend (last 60 analyzed)</h2><canvas id="trendChart" height="160"></canvas></div>
+        <div class="card"><h2>Sentiment share</h2><canvas id="shareChart" height="160"></canvas></div>
+      </div>
+      <div class="grid2">
+        <div class="card"><h2>Top positive words</h2><div id="topPos"></div></div>
+        <div class="card"><h2>Top negative words</h2><div id="topNeg"></div></div>
+      </div>
+    </section>
+
+    <section id="tab-history" class="tab">
+      <div class="card">
+        <div class="bar">
+          <input id="hq" placeholder="Search text...">
+          <select id="hlabel"><option>All</option><option>Positive</option><option>Neutral</option><option>Negative</option></select>
+          <button id="hSearch">Search</button>
+          <button id="hClear">Clear all history</button>
+        </div>
+        <div id="hOut"></div>
+      </div>
+    </section>
+
+    <section id="tab-lexicon" class="tab">
+      <div class="card">
+        <h2>Add or edit a word</h2>
+        <div class="bar">
+          <input id="lWord" placeholder="word (e.g. lit)" style="width:160px">
+          <input id="lScore" type="number" step="0.1" min="-4" max="4" placeholder="score -4..+4" style="width:140px">
+          <button class="pri" id="lSet">Save</button>
+          <button id="lReset">Reset to built-in</button>
+        </div>
+        <p class="sub">Positive score = positive word, negative score = negative word. Try adding slang like "lit" (+2.5) or "meh" (-1).</p>
+      </div>
+      <div class="card">
+        <div class="bar"><input id="lQuery" placeholder="Search lexicon..."><button id="lSearch">Search</button><span class="sub" id="lCount"></span></div>
+        <div id="lOut"></div>
+      </div>
+    </section>
+
+    <section id="tab-model" class="tab">
+      <div class="card">
+        <h2>Training dataset</h2>
+        <div id="dsInfo"></div>
+        <div class="bar">
+          <input type="file" id="trainFile" accept=".csv,text/csv">
+          <button class="pri" id="trainGo">Train on this CSV</button>
+          <button id="trainReset">Reset to built-in dataset</button>
+        </div>
+        <p class="sub">CSV with two columns: text,label (label = positive / neutral / negative). Needs 30+ rows.</p>
+      </div>
+      <div class="card">
+        <h2>Evaluate: Lexicon vs Naive Bayes</h2>
+        <div class="bar"><button class="pri" id="evalGo">Run evaluation (75% train / 25% test)</button></div>
+        <div id="evalOut"></div>
+      </div>
+    </section>
+  </main>
+</div>
+<script src="/app.js"></script>
+</body>
+</html>
